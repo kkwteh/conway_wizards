@@ -2,39 +2,31 @@ from __future__ import print_function
 
 from collections import Counter
 from operator import mul
-from collections import defaultdict
 
 # See http://stackoverflow.com/questions/10035752/elegant-python-code-for-integer-partitioning
 def partition(number):
-     answer = set()
-     answer.add((number, ))
-     for x in range(1, number):
-         for y in partition(number - x):
-             answer.add(tuple(sorted((x, ) + y)))
-     return answer
+    """
+    Returns a set of integer partitions for the number
+    """
+    answer = set()
+    answer.add((number, ))
+    for x in range(1, number):
+        for y in partition(number - x):
+            answer.add(tuple(sorted((x, ) + y)))
+    return answer
 
-def possible_ages(number):
-    pset = list(partition(number))
+def possible_ages(bus_number):
+    partitions = list(partition(bus_number))
 
-    # Find lengths for which multiple partitions of that length exist.
-    # Store their products (wizard's age) in multiprodsums dict
-    multilengths = set([length for length, count in Counter([len(p) for p in pset]).items() if count >= 2])
-    multiprodsums = defaultdict(list)
-    for p in pset:
-        if len(p) in multilengths:
-            multiprodsums[len(p)].append((sum(p), reduce(mul, p, 1)))
+    # Count the number of partitions that suggest each order pair of
+    # (number of kids, wizard's age)
+    n_kids_ages = Counter([(len(p), reduce(mul, p, 1)) for p in partitions])
 
-    # Find products that were the result of two or more distinct partitions
-    # and store in res (return value)
-    res = set()
-    for key, values in multiprodsums.items():
-        values_count = Counter(values)
-        for tpl, ct in values_count.items():
-            if ct > 1:
-                res.add(tpl[1])
-
-    return sorted(list(res))
+    # If multiple partitions suggest the same number of kids and the same age,
+    # add the age to the set of possible ages for the wizard and return the
+    # result as a sorted list
+    return sorted(list(set([age for (n_kids, age), ct in n_kids_ages.items() if ct > 1])))
 
 if __name__ == '__main__':
-    for i in range(1, 20):
-        print(i, possible_ages(i))
+    for bus_number in range(1, 20):
+        print(bus_number, possible_ages(bus_number))
